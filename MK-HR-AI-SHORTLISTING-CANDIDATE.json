@@ -1,0 +1,791 @@
+{
+  "name": "MK-HR-AI-SHORTLISTING-CANDIDATE",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Candidate Form",
+        "formDescription": "Please fill the required fields and we'll get in touch with you soon !\n\nJOB OPENINGS:\n1.Python Developer:\nPython Developer (Fresher / <1 Year) – Basic knowledge of Python, OOP, APIs, and databases; ability to write clean code and solve problems.\n\n2.AI Engineer:\nAI Engineer (Fresher / <1 Year) – Knowledge of Machine Learning, Python, TensorFlow/Scikit-learn, data analysis, and basic model building.\n\n3.Full Stack Engineer:\nFull Stack Engineer (Fresher / <1 Year) – Skills in HTML, CSS, JavaScript, Node.js/Python, databases, and basic frontend-backend development.\n\n4.Sales:\nSales Executive (Fresher / <1 Year) – Strong communication, lead generation, client handling, negotiation skills, and basic sales techniques.\n\n5.Operations:\nOperations Executive (Fresher / <1 Year) – Knowledge of operations management, MS Excel, coordination, communication, and process handling.\n\n\nNote: Only .pdf allowed for resume\n\n\n\n\n",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "placeholder": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "placeholder": "Email"
+            },
+            {
+              "fieldLabel": "CV (only .pdf allowed)",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf"
+            },
+            {
+              "fieldLabel": "Job Role",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Python Developer"
+                  },
+                  {
+                    "option": "AI Engineer"
+                  },
+                  {
+                    "option": "Full Stack Engineer"
+                  },
+                  {
+                    "option": "Sales"
+                  },
+                  {
+                    "option": "Operations"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Linkedin-ID"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "dd876938-0b6d-44b3-be29-d7aa3742a04a",
+      "name": "On form submission",
+      "webhookId": "86a45043-a78c-49da-b0c1-03b9a553de6e"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "CV",
+        "name": "=cv-{{ $json.CV[0].filename }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1nwy7RLDfEn5bK0OfONqdwbLhYlHI-Jfa",
+          "mode": "list",
+          "cachedResultName": "HR Screening Agent",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1nwy7RLDfEn5bK0OfONqdwbLhYlHI-Jfa"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        256,
+        -176
+      ],
+      "id": "d3428ff6-61f3-47b4-b8ba-e7e12b4400fe",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "cp4XBLMP8dRdr7ZI",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "=CV",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        0
+      ],
+      "id": "1eb1979e-b4db-491d-b77b-bfb13ae8ab68",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"telephone\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"city\": {\n          \"type\":\"string\"\n        },\n      \"birthdate\": {\n        \"type\":\"string\"\n      }\n    }\n }",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        -64
+      ],
+      "id": "56ce5a8b-4cae-4425-99c1-51cc44978872",
+      "name": "Personal Data"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Educational qualification",
+              "description": "Identify and extract all educational qualifications of the candidate from the provided text. Include degree name, specialization/field, institution name, and graduation year (if mentioned). Also capture relevant certifications, online courses, or training programs. Ensure the output is clear, structured, and concise.",
+              "required": true
+            },
+            {
+              "name": "Job History",
+              "description": "Extract the candidate's job history or work experience from the text. Include details such as job title, company name, duration, and key responsibilities if available. If the candidate is a fresher or has less than or equal to 1 year of experience, clearly mention \"Fresher\" or \"Less than 1 year experience\". Also include internships, part-time roles, or freelance work if present. Return a concise and structured summary.",
+              "required": true
+            },
+            {
+              "name": "Skills",
+              "description": "Identify and extract all skills from the provided text. Categorize them into technical skills (programming languages, frameworks, tools, technologies) and soft skills (communication, leadership, teamwork, problem-solving). Remove duplicates and normalize similar skills (e.g., \"JS\" → \"JavaScript\"). Return a clean, structured list of skills.",
+              "required": true
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        608,
+        144
+      ],
+      "id": "c2f2217c-2a73-4768-a397-9561e3a5fea5",
+      "name": "Qualifications"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1056,
+        -32
+      ],
+      "id": "09ad81cd-cb3d-4e5a-b9e6-10b8a0764fd4",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        464
+      ],
+      "id": "b4a14aab-bfdb-46be-b3be-7cc6016f06ae",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "tYNeoJ0BtpLF0AJa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "summarizationMethodAndPrompts": {
+            "values": {
+              "combineMapPrompt": "=Write a concise summary of the following:\n\nCity: {{ $json.output.city }}\nBirthdate: {{ $json.output.birthdate }}\nEducational qualification: {{ $json.output[\"Educational qualification\"] }}\n\n\nJob History: {{ $json.output[\"Job History\"] }}\n\nSkills: {{ $json.output.Skills }}\n\nI\n\nUse 100 words or less. Be concise and conversational.",
+              "prompt": "=Write a concise summary of the following:\n\nCity: {{ $json.output.city }}\nBirthdate: {{ $json.output.birthdate }}\nEducational qualification: {{ $json.output[\"Educational qualification\"] }}\n\n\nJob History: {{ $json.output[\"Job History\"] }}\n\nSkills: {{ $json.output.Skills }}\n\nI\n\nUse 100 words or less. Be concise and conversational."
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainSummarization",
+      "typeVersion": 2.1,
+      "position": [
+        1264,
+        -48
+      ],
+      "id": "b662714e-2421-475f-9b72-34dbad270887",
+      "name": "Summarization Chain"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vR62bIdBU50suYDvCzfVAdQs8jH0EVarw2RA1rlJZSc",
+          "mode": "list",
+          "cachedResultName": "HR Resume Screening",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vR62bIdBU50suYDvCzfVAdQs8jH0EVarw2RA1rlJZSc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Job Postings",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vR62bIdBU50suYDvCzfVAdQs8jH0EVarw2RA1rlJZSc/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Position",
+              "lookupValue": "={{ $(\"On form submission\").item.json[\"Job Role\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1632,
+        -32
+      ],
+      "id": "d338d059-69e3-4fcb-81d5-caf60580d576",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gqDmZsJrsFPQ2Zvp",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"vote\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"consideration\": {\n\t\t\t\"type\": \"string\"\n\t\t\t}\n\t\t}\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2064,
+        256
+      ],
+      "id": "7f6b060a-9ae1-4cfa-93ec-72debef3855c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Profile Details:\n{{ $json.Position }}\n\nCandidate:\n{{ $('Summarization Chain').item.json.output.text }}:\n",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an HR expert and need to assess if the candidate aligns with the profile the company is looking for. You must give a score from 1 to 10, where 1 means the candidate is not at all aligned with the requirements, while 10 means they are the ideal candidate because they perfectly match the desired profile. Additionally, in the \"consideration\" field, explain why you gave that score.\n"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1824,
+        -48
+      ],
+      "id": "5ea20b59-6267-4683-a901-56a6a33dfcae",
+      "name": "HR Expert"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1cb464f3-b277-4654-bd82-386f391710e7",
+              "leftValue": "={{ $json.output.vote }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2448,
+        -224
+      ],
+      "id": "6a7b7657-f10b-4d06-9dc2-0370a16643d2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "Subject: Congratulations! You're Shortlisted !",
+        "message": "=<div style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px;\">\n  <div style=\"max-width: 600px; margin: auto; background: #ffffff; border-radius: 10px; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);\">\n    \n    <h2 style=\"color: #2ecc71; text-align: center;\">🎉 Congratulations!</h2>\n    \n    <p style=\"font-size: 16px; color: #333;\">Hi <strong>{{ $('On form submission').item.json.Name }}</strong>,</p>\n    \n    <p style=\"font-size: 15px; color: #555;\">\n      We are excited to inform you that you have been <strong style=\"color:#2ecc71;\">shortlisted</strong> as a <strong>{{ $('On form submission').item.json['Job Role'] }}</strong> for the next round of our recruitment process.\n    </p>\n\n    <div style=\"background: #ecf9f1; padding: 15px; border-radius: 8px; margin: 15px 0;\">\n      <p style=\"margin: 0; font-size: 14px;\">\n        <strong>AI Score:</strong> {{ $('HR Expert').item.json.output.vote }}/10\n      </p>\n      <p style=\"margin: 0; font-size: 14px;\">\n        <strong>Status:</strong> Shortlisted\n      </p>\n    </div>\n\n    <p style=\"font-size: 15px; color: #555;\">\n      Our HR team will contact you soon for the interview process.\n    </p>\n\n    <p style=\"margin-top: 25px; font-size: 14px; color: #888;\">\n      Best regards,<br>\n      <strong>HR Team</strong>\n    </p>\n\n  </div>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2880,
+        -336
+      ],
+      "id": "6064b07b-bc15-4fd1-897b-656c3be3eeee",
+      "name": "Send a message",
+      "webhookId": "165202b5-77df-4b56-aaa5-dc22d4b27f50",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "MkvwA5QUbp5shFmt",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "Application Update",
+        "message": "=<div style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px;\">   <div style=\"max-width: 600px; margin: auto; background: #ffffff; border-radius: 10px; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);\">          <h2 style=\"color: #e74c3c; text-align: center;\">Application Update</h2>          <p style=\"font-size: 16px; color: #333;\">Hi <strong>{{ $json.name }}</strong>,</p>          <p style=\"font-size: 15px; color: #555;\">       Thank you for applying as a <strong>{{ $('On form submission').item.json['Job Role'] }}</strong> . After reviewing your profile, we regret to inform you that you have not been shortlisted at this time.     </p>      <div style=\"background: #fdecea; padding: 15px; border-radius: 8px; margin: 15px 0;\">       <p style=\"margin: 0; font-size: 14px;\">         <strong>AI Score:</strong> {{ $('HR Expert').item.json.output.vote }}/10       </p>       <p style=\"margin: 0; font-size: 14px;\">         <strong>Status:</strong> Not Selected       </p>     </div>      <p style=\"font-size: 15px; color: #555;\">       We encourage you to improve your skills and apply again in the future.     </p>      <p style=\"margin-top: 25px; font-size: 14px; color: #888;\">       Best regards,<br>       <strong>HR Team</strong>     </p>    </div> </div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2880,
+        -96
+      ],
+      "id": "22e2e45d-adc7-4ed7-bba2-dd2d80db2c99",
+      "name": "Send a message1",
+      "webhookId": "7af7549e-3354-4bd3-b9a7-54add45a2695",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "MkvwA5QUbp5shFmt",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ac14f8e7-818c-4b51-977c-88cb4080d0e0",
+              "name": "status",
+              "value": "={{ $json.output.vote > 7 ? \"Shortlisted\" : \"Rejected\" }}",
+              "type": "string"
+            },
+            {
+              "id": "c7adfb3e-111d-40d3-8807-f4544aa0abde",
+              "name": "=candidate_id",
+              "value": "={{ \"CAND-\" + $('On form submission').item.json.Name.slice(0,3).toUpperCase() + \"-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1000) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2192,
+        0
+      ],
+      "id": "4e0a7c62-5b72-41ec-82d3-c8ec5a3b0a25",
+      "name": "SET NODE"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1vR62bIdBU50suYDvCzfVAdQs8jH0EVarw2RA1rlJZSc",
+          "mode": "list",
+          "cachedResultName": "HR Resume Screening",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vR62bIdBU50suYDvCzfVAdQs8jH0EVarw2RA1rlJZSc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 834520502,
+          "mode": "list",
+          "cachedResultName": "Candidates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vR62bIdBU50suYDvCzfVAdQs8jH0EVarw2RA1rlJZSc/edit#gid=834520502"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "DATE": "={{ $('On form submission').item.json.submittedAt }}",
+            "NAME": "={{ $('On form submission').item.json.Name }}",
+            "PHONE": "={{ $('Personal Data').item.json.output.telephone }}",
+            "CITY": "={{ $('Personal Data').item.json.output.city }}",
+            "EMAIL": "={{ $('On form submission').item.json.Email }}",
+            "JOB HISTORY": "={{ $('Qualifications').item.json.output['Job History'] }}",
+            "SKILLS": "={{ $('Qualifications').item.json.output.Skills }}",
+            "SUMMARIZE": "={{ $('Summarization Chain').item.json.output.text }}",
+            "VOTE": "={{ $('HR Expert').item.json.output.vote }}",
+            "CONSIDERATION": "={{ $('HR Expert').item.json.output.consideration }}",
+            "STATUS": "={{ $json.status }}",
+            "JOB ROLE": "={{ $('On form submission').item.json['Job Role'] }}",
+            "CAND_ID": "={{ $json.candidate_id }}",
+            "LINKEDIN-ID": "={{ $('On form submission').item.json['Linkedin-ID'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "DATE",
+              "displayName": "DATE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CAND_ID",
+              "displayName": "CAND_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "JOB ROLE",
+              "displayName": "JOB ROLE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LINKEDIN-ID",
+              "displayName": "LINKEDIN-ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PHONE",
+              "displayName": "PHONE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CITY",
+              "displayName": "CITY",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "EMAIL",
+              "displayName": "EMAIL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "JOB HISTORY",
+              "displayName": "JOB HISTORY",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SKILLS",
+              "displayName": "SKILLS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SUMMARIZE",
+              "displayName": "SUMMARIZE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "VOTE",
+              "displayName": "VOTE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CONSIDERATION",
+              "displayName": "CONSIDERATION",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "STATUS",
+              "displayName": "STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2400,
+        0
+      ],
+      "id": "63b185b5-f361-4370-a7a4-162e8ef8b1f5",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gqDmZsJrsFPQ2Zvp",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Personal Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Qualifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Personal Data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualifications": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Personal Data",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Qualifications",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Summarization Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "HR Expert",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Summarization Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarization Chain": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "HR Expert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "HR Expert",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HR Expert": {
+      "main": [
+        [
+          {
+            "node": "SET NODE",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        []
+      ]
+    },
+    "SET NODE": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5e59c4fa-54eb-4949-9365-b54aceb345a3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e25d5b9559b29308fbfb24c78f0b67eda5a3d8cbb25a8200e74bd8e9949f4c53"
+  },
+  "id": "u54BUWgGDH4keyzO",
+  "tags": []
+}
